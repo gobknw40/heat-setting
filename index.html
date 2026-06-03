@@ -333,59 +333,97 @@ function scanBarcode(target){
 
 async function sendData(){
 
-  let ip =
-    document.getElementById("ip")
-      .value.trim();
+let ip =
+document.getElementById("ip")
+.value.trim();
 
-  let s1 =
-    document.getElementById("style1")
-      .value.trim();
+let s1 =
+document.getElementById("style1")
+.value.trim();
 
-  let s2 =
-    document.getElementById("style2")
-      .value.trim();
+let s2 =
+document.getElementById("style2")
+.value.trim();
 
-  let offset =
-    document.getElementById("offset")
-      .value.trim();
+let offset =
+document.getElementById("offset")
+.value.trim();
 
-  let finalStyle =
-    s1 + "##" + s2;
+let finalStyle =
+s1 + "##" + s2;
 
-  let url =
-    `http://${ip}/set?style=${encodeURIComponent(finalStyle)}&offset=${encodeURIComponent(offset)}`;
+document.getElementById("result")
+.innerHTML =
+"⏳ SENDING...";
 
-  document.getElementById("result")
-    .innerHTML =
-      "⏳ SENDING...";
+try{
 
-  try{
+const url =
+  `http://${ip}/set?style=${encodeURIComponent(finalStyle)}&offset=${encodeURIComponent(offset)}`;
 
-    let r =
-      await fetch(url);
+await fetch(url,{
+  method:"GET",
+  mode:"no-cors",
+  cache:"no-cache"
+});
 
-    if(r.ok){
+document.getElementById("result")
+  .innerHTML =
+    "✅ SEND SUCCESS";
 
-      document.getElementById("result")
-        .innerHTML =
-          "✅ SEND SUCCESS";
+localStorage.setItem("lastIP",ip);
+localStorage.setItem("lastStyle1",s1);
+localStorage.setItem("lastStyle2",s2);
+localStorage.setItem("lastOffset",offset);
 
-    }else{
+}catch(e){
 
-      document.getElementById("result")
-        .innerHTML =
-          "❌ DEVICE ERROR";
-    }
+document.getElementById("result")
+  .innerHTML =
+    "❌ CONNECT FAIL";
 
-  }catch(e){
-
-    document.getElementById("result")
-      .innerHTML =
-        "❌ CONNECT FAIL";
-  }
+}
 }
 
 updatePreview();
+window.onload = function(){
+
+document.getElementById("ip").value =
+localStorage.getItem("lastIP") || "192.168.19.182";
+
+document.getElementById("style1").value =
+localStorage.getItem("lastStyle1") || "";
+
+document.getElementById("style2").value =
+localStorage.getItem("lastStyle2") || "";
+
+document.getElementById("offset").value =
+localStorage.getItem("lastOffset") || "0";
+
+updatePreview();
+};
+</script>
+<script>
+
+if ('serviceWorker' in navigator) {
+
+  window.addEventListener('load', () => {
+
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => {
+
+        console.log('PWA Ready');
+
+      })
+      .catch(err => {
+
+        console.log(err);
+
+      });
+
+  });
+
+}
 
 </script>
 
