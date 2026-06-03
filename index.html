@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Heat Setting</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  padding:0;
+  font-family:sans-serif;
+  background:#f2f5f9;
+  color:#222;
+}
+
+.container{
+  max-width:480px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  border-radius:18px;
+  padding:20px;
+  margin-top:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.title{
+  font-size:28px;
+  font-weight:bold;
+  text-align:center;
+  margin-bottom:10px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#666;
+  margin-bottom:20px;
+}
+
+label{
+  display:block;
+  margin-top:16px;
+  margin-bottom:6px;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #ccc;
+  border-radius:10px;
+  font-size:16px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.scan-btn{
+  background:#4CAF50;
+  color:white;
+}
+
+.send-btn{
+  background:#2196F3;
+  color:white;
+}
+
+.qr-btn{
+  background:#ff9800;
+  color:white;
+}
+
+.info{
+  margin-top:20px;
+  padding:14px;
+  background:#f5f5f5;
+  border-radius:10px;
+  font-size:14px;
+  line-height:1.7;
+}
+
+#reader{
+  margin-top:20px;
+}
+
+#result{
+  margin-top:20px;
+  font-weight:bold;
+  text-align:center;
+  font-size:18px;
+}
+
+.preview{
+  margin-top:10px;
+  background:#eef6ff;
+  padding:12px;
+  border-radius:10px;
+  font-size:14px;
+  word-break:break-all;
+}
+
+.badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:20px;
+  background:#e53935;
+  color:white;
+  font-size:14px;
+  margin-bottom:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<div class="title">
+🔥 Heat Setting
+</div>
+
+<div class="subtitle">
+ESP8266 Control Panel
+</div>
+
+<div class="badge">
+QR + Barcode Scanner
+</div>
+
+<label>Device IP</label>
+
+<input id="ip" value="192.168.19.182">
+
+<button class="qr-btn"
+onclick="scanIP()">
+
+📷 Scan QR Code IP
+
+</button>
+
+<label>Style / Item 1</label>
+
+<input id="style1">
+
+<button class="scan-btn"
+onclick="scanBarcode(1)">
+
+📦 Scan Barcode ช่อง 1
+
+</button>
+
+<label>Style / Item 2</label>
+
+<input id="style2">
+
+<button class="scan-btn"
+onclick="scanBarcode(2)">
+
+📦 Scan Barcode ช่อง 2
+
+</button>
+
+<label>Temp Offset</label>
+
+<input id="offset" value="0">
+
+<button class="send-btn"
+onclick="sendData()">
+
+💾 SEND TO DEVICE
+
+</button>
+
+<div class="preview">
+
+<b>Preview:</b><br>
+<span id="previewText">
+-
+</span>
+
+</div>
+
+<div id="result"></div>
+
+<div id="reader"></div>
+
+<div class="info">
+
+<b>การทำงาน:</b><br>
+
+1. Scan QR IP ของเครื่อง<br>
+2. Scan Barcode ทั้ง 2 ช่อง<br>
+3. ระบบจะรวมเป็น:<br><br>
+
+<b>
+STYLE1##STYLE2
+</b>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let scanner = null;
+let currentMode = "";
+let currentTarget = 1;
+
+function updatePreview(){
+
+  let s1 =
+    document.getElementById("style1").value;
+
+  let s2 =
+    document.getElementById("style2").value;
+
+  document.getElementById("previewText")
+    .innerHTML =
+      s1 + "##" + s2;
+}
+
+document.getElementById("style1")
+.addEventListener("input", updatePreview);
+
+document.getElementById("style2")
+.addEventListener("input", updatePreview);
+
+function startScanner(onSuccess){
+
+  document.getElementById("reader")
+    .innerHTML = "";
+
+  scanner =
+    new Html5Qrcode("reader");
+
+  scanner.start(
+
+    { facingMode: "environment" },
+
+    {
+      fps:10,
+      qrbox:250
+    },
+
+    function(decodedText){
+
+      onSuccess(decodedText);
+
+      scanner.stop();
+
+    },
+
+    function(errorMessage){}
+  );
+}
+
+function scanIP(){
+
+  currentMode = "ip";
+
+  startScanner(function(text){
+
+    text =
+      text.replace("http://","")
+          .replace("https://","")
+          .replace("/","");
+
+    document.getElementById("ip")
+      .value = text;
+
+    document.getElementById("result")
+      .innerHTML =
+        "✅ IP SET: " + text;
+
+  });
+}
+
+function scanBarcode(target){
+
+  currentMode = "barcode";
+  currentTarget = target;
+
+  startScanner(function(text){
+
+    if(currentTarget == 1){
+
+      document.getElementById("style1")
+        .value = text;
+
+    }else{
+
+      document.getElementById("style2")
+        .value = text;
+    }
+
+    updatePreview();
+
+    document.getElementById("result")
+      .innerHTML =
+        "✅ SCAN OK";
+
+  });
+}
+
+async function sendData(){
+
+  let ip =
+    document.getElementById("ip")
+      .value.trim();
+
+  let s1 =
+    document.getElementById("style1")
+      .value.trim();
+
+  let s2 =
+    document.getElementById("style2")
+      .value.trim();
+
+  let offset =
+    document.getElementById("offset")
+      .value.trim();
+
+  let finalStyle =
+    s1 + "##" + s2;
+
+  let url =
+    `http://${ip}/set?style=${encodeURIComponent(finalStyle)}&offset=${encodeURIComponent(offset)}`;
+
+  document.getElementById("result")
+    .innerHTML =
+      "⏳ SENDING...";
+
+  try{
+
+    let r =
+      await fetch(url);
+
+    if(r.ok){
+
+      document.getElementById("result")
+        .innerHTML =
+          "✅ SEND SUCCESS";
+
+    }else{
+
+      document.getElementById("result")
+        .innerHTML =
+          "❌ DEVICE ERROR";
+    }
+
+  }catch(e){
+
+    document.getElementById("result")
+      .innerHTML =
+        "❌ CONNECT FAIL";
+  }
+}
+
+updatePreview();
+
+</script>
+
+</body>
+</html>
+
